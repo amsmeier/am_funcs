@@ -16,7 +16,7 @@ switch compname
         % paths.data = 'C:\Dropbox\wustl'; 
         paths.data = 'C:\temp\F';
 
-    case  'DESKTOP-H739EDS' %%%%%%% thermaltake - former AB lab computer 
+    case   %%%%%%% thermaltake - former AB lab computer 
         paths.code = 'C:\Users\Burkhalter Lab\Documents\matlab_functions\am_funcs'; 
         paths.data = 'F:\'; 
 end
