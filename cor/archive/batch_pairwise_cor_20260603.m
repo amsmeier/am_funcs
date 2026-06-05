@@ -7,9 +7,6 @@
 
 function [cortable, filetable] = batch_pairwise_cor(filetable_in,pars)
 
-[paths, compname] = setpaths_locmod(); 
-vardefault('filetable_in',[paths.data, filesep, 'analysis_master.xlsx']); 
-
 pars = vardefault('pars',struct);
 pars.layers_to_analyze = field_default(pars,'layers_to_analyze', [  ]);
 % pars.days_to_analyze =  field_default(pars, 'days_to_analyze', {'2018-02-02', '2018-03-28', '2018-04-06'}); % han lab
@@ -18,13 +15,12 @@ show_plots = 0;
 pars.show_waitbar = 0; % don't show wait bar within each session; doesn't affect waitbar in this function
 
 if ~istable(filetable_in) % if filetable_in is a filename rather than an already-processed table variable
-    filetable = readtable(filetable_in); % load master file list
+    filetable = excel2table(filetable_in); % load master file list
     filetable = filetable(filetable.analyze_plane == 1,:); % keep only planes that have be marked for analysis
     filetable.analyze_plane = [];  
 elseif istable(filetable_in)
     filetable = filetable_in;
 end
-filetable = replace_table_strings(filetable,'F:',paths.data); %  replace "F:" in every path of analysis_master.xlxs with the actual data path of the computer
 nfiles = height(filetable);
 pars.days_to_analyze =  field_default(pars, filetable.day);
 
