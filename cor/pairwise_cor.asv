@@ -8,15 +8,11 @@
 
 function [cortable, dff_downsampled] = pairwise_cor(tuningdat, starttime_voltage_recording, endtime_voltage_recording, show_plots, pars)
 
-
-
-vardefault('show_plots',0); 
-
-field_default('pars','loc_range_mps',[-inf inf]); %%% for noise correlations, only include trials with mean locomotion in meters/s within this range
-
+compute_noise_correlations = 1; 
+    pars.loc_range_mps = field_default('pars','loc_range_mps',[-inf inf]); %%% for noise correlations, only include trials with mean locomotion in meters/s within this range
 stimparams = {'sf','tf','orient',}; %%% parameters to analyze for noise correlations - don't include rf
-
-field_default('pars','show_waitbar',1); 
+show_plots = vardefault('show_plots',0); 
+pars.show_waitbar = field_default(pars,'show_waitbar',1); 
 % downsample dff (by averaging) before computing correlations to see how sample rate affects correlations
 pars.downsample_dff = field_default(pars,'downsample_dff',0); 
     pars.downsample_factor = field_default(pars,'downsample_factor',1);
@@ -27,7 +23,7 @@ ncombos = ((nrois-1)^2 + nrois-1) / 2; % from (n^2 + n)/2 replacing n with n-1..
 patchdata = tuningdat.patchdata;
 umPerPixels = umPerPix(patchdata.zoom,patchdata.scope);
 
-field_default('pars','compute_noise_correlations',true); 
+
 
 %%%% make cortable:
 %      roi1 and roi2 = row from tuningdat.tuning from which the two rois were taken
@@ -108,7 +104,7 @@ for roi1 = 1:nrois
         end
 
         %% noise (stim-on) correlations.... could limit window from which stim-response values are taken to shorter 'transient response' period
-        if pars.compute_noise_correlations
+        if compute_noise_correlations
             noisecors = []; % initialize list of noise cors for all stimpars and stimpar values
             for iparam = 1:length(stimparams) %%% get noise correlations for each stim param tested, then combine them
                 thispar = stimparams{iparam};

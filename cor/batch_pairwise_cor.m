@@ -10,10 +10,14 @@ function [cortable, filetable] = batch_pairwise_cor(filetable_in,pars)
 [paths, compname] = setpaths_locmod(); 
 vardefault('filetable_in',[paths.data, filesep, 'analysis_master.xlsx']); 
 
-pars = vardefault('pars',struct);
-pars.layers_to_analyze = field_default(pars,'layers_to_analyze', [  ]);
-% pars.days_to_analyze =  field_default(pars, 'days_to_analyze', {'2018-02-02', '2018-03-28', '2018-04-06'}); % han lab
-% pars.days_to_analyze =  field_default(pars, 'days_to_analyze', {'2018-12-30', '2019-01-04', '2019-01-07', '2019-01-18', '2019-01-19', '2019-01-20', '2019-01-21'}); % 4th floor scpoe
+vardefault('pars',struct);
+field_default('pars','layers_to_analyze', [  ]);
+
+field_default('pars', 'days_to_analyze', {})
+% field_default('pars', 'days_to_analyze', {'2018-02-02', '2018-03-28', '2018-04-06'}); % han lab
+% field_default('pars', 'days_to_analyze', {'2018-12-30', '2019-01-04', '2019-01-07', '2019-01-18', '2019-01-19', '2019-01-20', '2019-01-21'}); % 4th floor scpoe
+
+
 show_plots = 0; 
 pars.show_waitbar = 0; % don't show wait bar within each session; doesn't affect waitbar in this function
 
@@ -32,8 +36,8 @@ pars.days_to_analyze =  field_default(pars, filetable.day);
 cortable = table;
 wbar = waitbar(0,'Gathering pairwise correlation data...');
 for ifile = 1:nfiles
-    if any(pars.layers_to_analyze == filetable.layer(ifile)) || isempty(pars.layers_to_analyze)
-        if any(strcmp(pars.days_to_analyze, filetable.day{ifile})) || isempty(pars.days_to_analyze)
+    if isempty(pars.layers_to_analyze) || any(pars.layers_to_analyze == filetable.layer(ifile)) 
+        if isempty(pars.days_to_analyze) || any(strcmp(pars.days_to_analyze, filetable.day{ifile})) 
             tuning_file = [filetable.directory{ifile}, filesep, filetable.tuning_file{ifile}];
             tuningdat = load(tuning_file,'tuningdat'); tuningdat = tuningdat.tuningdat;
             %  if there's nostim_onset or nostim_offset are missing, use dark onset and dark offset
