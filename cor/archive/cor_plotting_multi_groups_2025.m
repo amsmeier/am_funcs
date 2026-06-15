@@ -3,8 +3,7 @@
 %%% cortable must be loaded first
 %%% include_temp will be determined in this upper level script
 %
-
-paths = setpaths_locmod(); 
+%%% % updated 2022/3/9 on thermaltake
 
 if ~exist('cortable','var')
     load('F:\analyses\cor2022-03-14_for_plotting.mat')
@@ -18,8 +17,8 @@ titlestring = '';
 
 %%
 plot_modules_overlaid = 1; % plot P-P, P-IP, IP-IP on the same axis... leave on if running interval plotting
-    pars.plot_noise = 1; 
-    pars.plot_rest = 0; 
+    pars.plot_noise = 0; 
+    pars.plot_rest = 1; 
     %%%%%%% run_sorting_function must be turned on for changes to include_temp to take effect
     pars.run_sorting_function = 1; %% run pairwise_cor_plotting.m (slow); if false, use the data already in the workspace
     pars.overlay_subplots = 0; % plot overlaid axes in subplots
@@ -61,9 +60,8 @@ run_interval_plotting = 1; %%% plot aggregated cor values from a specific distan
         intervalpars.ylim = [0 0.2]; 
         intervalpars.fig_outerposition = [0.05 0.05 0.4 0.7]; % [left bottom width height]
     % intervalpars.umdist_minmax = [150 180]; 
-
-    % intervalpars.var_to_plot = 'corcoef_rest'; % NB: this field doesn't have much effect when running cor_plotting_multi_groups
-    intervalpars.var_to_plot = 'corcoef_noise';% NB: this field doesn't have much effect when running cor_plotting_multi_groups
+    intervalpars.var_to_plot = 'corcoef_rest'; % NB: this field doesn't have much effect when running cor_plotting_multi_groups
+%     intervalpars.var_to_plot = 'corcoef_noise';% NB: this field doesn't have much effect when running cor_plotting_multi_groups
 
 % general options
 pars.show_title = 1; 
@@ -95,7 +93,7 @@ include_temp = include_temp & all(cortable.sf_sgnf | cortable.tf_sgnf | cortable
 % include_temp = include_temp & all(cortable.sf_sgnf | cortable.tf_sgnf | cortable.orient_sgnf | cortable.rf_sgnf | cortable.rspv_pval<0.05, 2); % tuned for sf/tf/orient/rf or general responsiveness
 % include_temp = include_temp & all(cortable.rf_sgnf,2); [titlestring, ' rf_sgnf']; % require both cells to be rf tuned
 
-include_temp = include_temp & all(cortable.stim_on_rf,2); titlestring = [titlestring, ' stim_on_rf']; %%% both cells had the stimulus overlapping with their RFs
+% include_temp = include_temp & all(cortable.stim_on_rf,2); titlestring = [titlestring, ' stim_on_rf']; %%% both cells had the stimulus overlapping with their RFs
 %     include_temp = include_temp & all(~cortable.stim_on_rf,2); titlestring = [titlestring, ' ~stim_on_rf']; %%% neither cell had the stimulus overlapping with their RF
 % include_temp = include_temp & all(cortable.locm_sgnf,2); titlestring = [titlestring, ' locm_sgnf']; %%% both cells in pair locomotion responsive in darkness
 %   include_temp = include_temp & all(~cortable.locm_sgnf,2); titlestring = [titlestring, ' ~locm_sgnf']; %%% both cells in pair locomotion non-responsive in darkness
@@ -217,8 +215,8 @@ cortable_alldist_noise = table([plotted_ipip_noise; plotted_pip_noise; plotted_p
     [repmat({'ipip'},length(plotted_ipip_noise),1); repmat({'pip'},length(plotted_pip_noise),1); repmat({'pp'},length(plotted_pp_noise),1)],...
     'VariableNames',{'cor','pairtype'});
 
-[p_rest,tbl_rest,stats_rest] = anova1(cortable_alldist_rest.cor, cortable_alldist_rest.pairtype,'off');
-[p_noise,tbl_noise,stats_noise] = anova1(cortable_alldist_noise.cor, cortable_alldist_noise.pairtype,'off');
+[p_rest,tbl_rest,stats_rest] = anova1(cortable_alldist_rest.cor, cortable_alldist_rest.pairtype,'on');
+[p_noise,tbl_noise,stats_noise] = anova1(cortable_alldist_noise.cor, cortable_alldist_noise.pairtype,'on');
 
 
 %%%% plot 4 axes without overlaying p-p with ip-ip... may no longer be functional

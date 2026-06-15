@@ -12,9 +12,11 @@ compname = getenv('COMPUTERNAME');
 switch compname 
     case 'AMSMEIER' % AM Strix laptop
         paths.code = 'C:\docs\code\am_funcs'; 
-
-        % paths.data = 'C:\Dropbox\wustl'; 
         paths.data = 'C:\temp\F';
+
+    case '677-GUE-WL-0010' % work thinkpad x1
+        paths.code = 'C:\docs\code\am_funcs'; 
+        paths.data = 'C:\Dropbox\wustl'; 
 
     case  'DESKTOP-H739EDS' %%%%%%% thermaltake - former AB lab computer 
         paths.code = 'C:\Users\Burkhalter Lab\Documents\matlab_functions\am_funcs'; 

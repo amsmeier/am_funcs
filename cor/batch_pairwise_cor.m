@@ -1,4 +1,5 @@
 %%% pairwise correlations for multiple planes/sessions
+% this script should be run to generate the pairwise correlations table, which will need to be saved
 %
 %  [cortable, filetable] = batch_pairwise_cor(filetable_in,pars)
 %
@@ -9,8 +10,8 @@ function [cortable, filetable] = batch_pairwise_cor(filetable_in,pars)
 
 [paths, compname] = setpaths_locmod(); 
 vardefault('filetable_in',[paths.data, filesep, 'analysis_master.xlsx']); 
-
 vardefault('pars',struct);
+
 field_default('pars','layers_to_analyze', [  ]);
 
 field_default('pars', 'days_to_analyze', {})
