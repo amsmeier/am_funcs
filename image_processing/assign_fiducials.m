@@ -3,6 +3,9 @@
 %
 % assign_fiducials(movingimage,refimage,old_pair_file,savename,reverse_points)
 %
+%
+% reverse_points==1 will exchange old movingpoints and fixedpoints 
+%
 %%%% last edited 20/5/5 on thermaltake
 
 function assign_fiducials(movingimage,refimage,old_pair_file,savename,reverse_points)
