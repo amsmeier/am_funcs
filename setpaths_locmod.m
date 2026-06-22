@@ -31,6 +31,7 @@ paths.image_processing = [paths.code, filesep, 'image_processing'];
 paths.fig_funcs = [paths.code, filesep, 'fig_funcs'];
 paths.downloaded = [paths.code, filesep, 'downloaded'];
 paths.gaussfit = [paths.downloaded, filesep, 'gaussfit']; 
+paths.analyses = [paths.data, filesep, 'analyses']; 
 
  paths_to_add =  {paths.code;...
      paths.util;...
