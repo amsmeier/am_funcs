@@ -40,25 +40,19 @@ end
 %% generate plots for sf, tf, orient - scatter plot with point for each run, color coded by subject
 
 hfig = figure('Color','w','WindowState', 'maximized');
-subs = unique(runs.sub);
-subs = table(subs,'VariableNames',{'sub'});
-nsubs = height(subs);
 for ipar = op.n_stimpars
     thispar_long = op.stimparams_long{ipar};
     thispar = op.stimpars{ipar};
     subplot(1,ipar,op.n_stimpars)
 
-    for isub = 1:nsubs
-        thissub = subs.sub{isub};
-
-        switch thispar
-            case {'sf','tf'}
-
-               % get spearman correlation between locomotion and stim param value in this run 
-                [rho,pval] = corr([runs.('ev'){irun}{:,thispar_long}, runs.('ev'){irun}{:,'locomotion_forw_mpersec'}] ,'Type','Spearman', 'rows','complete')
-            case 'orient'
     
-        end
+    
+    switch thispar
+        case {'sf','tf'}
+
+        case 'orient'
+
     end
+    
 
 end
