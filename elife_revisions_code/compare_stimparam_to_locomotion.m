@@ -1,3 +1,10 @@
+
+% simple corr:
+% load("C:\temp\F\20015\2020-05-18\tuningdat.mat")
+% [h p] = corrcoef(repmat(tuningdat.tuningpars.locm_trials.sf.sf,1,size(tuningdat.tuningpars.locm_trials.sf.locm_forw_mps,2)),...
+%     tuningdat.tuningpars.locm_trials.sf.locm_forw_mps, 'Rows', 'complete')
+
+
 %%% check whether locomotion changes depends on stimulus identity
 % for reviewer 3 public comment 1
 %%% first load locomotion vs. stim parameters timepoints for each subject
