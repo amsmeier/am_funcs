@@ -33,12 +33,10 @@ else
         % runs.ev{irun} = table(ev.onset, ev.locomotion_forw_mpersec, ev.stim_present, ev.stim_orient_deg, ev.stim_sf_cyclesperdeg, ev.stim_tf_hz, ev.stim_diam_deg,'VariableNames',...
         %                        { 'onset', 'locomotion_forw_mpersec',  'stim_present',  'stim_orient_deg', 'stim_sf_cyclesperdeg',   'stim_tf_hz', 'stim_diam_deg'});
         for ipar = 1:op.n_stimpars
-            thispar = op.stimpars{ipar};
+            thispar = 
             % % % simple corr:
-            parvals = tuningdat.tuningpars.locm_trials.(thispar){:,thispar}; 
-            locm_vals = tuningdat.tuningpars.locm_trials.(thispar).locm_forw_mps; 
-            [h p] = corrcoef(repmat(parvals,1,size(locm_vals,2)),...
-                             locm_vals, 'Rows', 'complete');
+            [h p] = corrcoef(repmat(tuningdat.tuningpars.locm_trials.sf.sf,1,size(tuningdat.tuningpars.locm_trials.sf.locm_forw_mps,2)),...
+                tuningdat.tuningpars.locm_trials.sf.locm_forw_mps, 'Rows', 'complete')
         end
     end
     
