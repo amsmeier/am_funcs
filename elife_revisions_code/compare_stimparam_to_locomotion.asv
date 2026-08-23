@@ -7,7 +7,7 @@
 % for reviewer 3 public comment 1
 %%% first load locomotion vs. stim parameters timepoints for each subject
 
-rerun_tabulate_subjects = 0; % if true, regenerate and save the table; otherwise, try to load it from disk
+rerun_tabulate_subjects = 1; % if true, regenerate and save the table; otherwise, try to load it from disk
 
 op.stimparams_long = {"stim_sf_cyclesperdeg","stim_tf_hz","stim_orient_deg"}; % original names in events table 
     op.stimpars =    {"sf",                     "tf",       "orient"}; 
@@ -19,6 +19,7 @@ if ~rerun_tabulate_subjects
 else
     % load list of runs to analyze
     runs = readtable(paths.subjects_master); % load master file list
+    runs.sub = cellstr(num2str(runs.sub));
     runs = runs(runs.analyze_plane == 1,:); % keep only planes that have be marked for analysis
     runs.analyze_plane = [];  
     runs = replace_table_strings(runs,'F:',paths.data); %  replace "F:" in every path of analysis_master.xlxs with the actual data path of the computer
@@ -32,7 +33,9 @@ else
         ev = tuningdat.scope_events; 
         runs.ev{irun} = table(ev.onset, ev.locomotion_forw_mpersec, ev.stim_present, ev.stim_orient_deg, ev.stim_sf_cyclesperdeg, ev.stim_tf_hz, ev.stim_diam_deg,'VariableNames',...
                                { 'onset', 'locomotion_forw_mpersec',  'stim_present',  'stim_orient_deg', 'stim_sf_cyclesperdeg',   'stim_tf_hz', 'stim_diam_deg'});
-  
+
+        %%% a triawise locm vs. stimparam for this run to the all-runs table
+        runs.locm_trials{irun} = tuningdat.tuningpars.locm_trials; 
     end
     
     % organize and save
@@ -40,59 +43,85 @@ else
     save([paths.analyses, filesep, 'stimparam_vs_locomotion'],'runs','op')
 end
 
-%% generate plots for sf, tf, orient - scatter plot with point for each run, color coded by subject
-% this section looks at 'scope events'.... we should not use this discretization - instead discretize per trial
-
-hfig = figure('Color','w','WindowState', 'maximized');
-subs = unique(runs.sub);
-subs = table(subs,'VariableNames',{'sub'});
-nsubs = height(subs);
-for ipar = op.n_stimpars
-    thispar_long = op.stimparams_long{ipar};
-    thispar = op.stimpars{ipar};
-    subplot(1,ipar,op.n_stimpars)
-
-    for isub = 1:nsubs
-        thissub = subs.sub{isub};
-
-        switch thispar
-            case {'sf','tf'}
-
-               % get spearman correlation between locomotion and stim param value in this run 
-                [rho,pval] = corr([runs.('ev'){irun}{:,thispar_long}, runs.('ev'){irun}{:,'locomotion_forw_mpersec'}] ,'Type','Spearman', 'rows','complete')
-            case 'orient'
-    
-        end
-    end
-
-end
+% %% generate plots for sf, tf, orient - scatter plot with point for each run, color coded by subject
+% % this section looks at 'scope events'.... we should not use this discretization - instead discretize per trial
+% 
+% hfig = figure('Color','w','WindowState', 'maximized');
+% subs = unique(runs.sub);
+% subs = table(subs,'VariableNames',{'sub'});
+% nsubs = height(subs);
+% for ipar = op.n_stimpars
+%     thispar_long = op.stimparams_long{ipar};
+%     thispar = op.stimpars{ipar};
+%     subplot(1,ipar,op.n_stimpars)
+% 
+%     for isub = 1:nsubs
+%         thissub = subs.sub{isub};
+% 
+%         switch thispar
+%             case {'sf','tf'}
+% 
+%                % get spearman correlation between locomotion and stim param value in this run 
+%                 [rho,pval] = corr([runs.('ev'){irun}{:,thispar_long}, runs.('ev'){irun}{:,'locomotion_forw_mpersec'}] ,'Type','Spearman', 'rows','complete')
+%             case 'orient'
+% 
+%         end
+%     end
+% 
+% end
 
 %% trial to trial locm vs. stim param
 
-hfig = figure('Color','w','WindowState', 'maximized');
-subs = unique(runs.sub);
-subs = table(subs,'VariableNames',{'sub'});
-nsubs = height(subs);
+% hfig = figure('Color','w','WindowState', 'maximized');
+subs = table('RowNames',unique(runs.sub));
+    nsubs = height(subs);
+    subs.locm_trials_sf = cell(nsubs,1);
+    subs.locm_trials_tf = cell(nsubs,1);
+    subs.locm_trials_orient = cell(nsubs,1);
+
+
 for ipar = op.n_stimpars
     thispar_long = op.stimparams_long{ipar};
     thispar = op.stimpars{ipar};
-    hfig = figure
+    hfig = figure;
 
     for isub = 1:nsubs
-        thissub = subs.sub{isub};
-        subplot(
+        thissub = runs.sub{irun};
+        subs{thissub,['locm_trials_',char(thispar)]} = {cell(1,nruns_this_sub)}; 
 
-        switch thispar
-            case {'sf','tf'}
-                % % % simple corr:
-                parvals = tuningdat.tuningpars.locm_trials.(thispar){:,thispar}; 
-                locm_vals = tuningdat.tuningpars.locm_trials.(thispar).locm_forw_mps; 
-                [h p] = corrcoef(repmat(parvals,1,size(locm_vals,2)),...
-                    locm_vals, 'Rows', 'complete');
- 
-            case 'orient'
+        runs_this_sub_idx = find(ismember(runs.sub, thissub)); 
+        nruns_this_sub = length(runs_this_sub_idx); 
+        locm_trials_thispar = cell(1,nruns_this_sub);
+
+        for irun_this_sub = 1:length(runs_this_sub_idx)
+            run_idx = runs_this_sub_idx(irun_this_sub); 
+            locm_trials_thispar{irun_this_sub} = runs.locm_trials{run_idx}; % store trial locm data for this run for this subject
+        
+
+            switch thispar
+                case {'sf','tf'}
+                    % % % simple corr:
+                    parvals = runs.locm_trials{run_idx}.(thispar){:,thispar}; 
+                    locm_vals = runs.locm_trials{run_idx}.(thispar).locm_forw_mps; 
+                    [h p] = corrcoef(repmat(parvals,1,size(locm_vals,2)),...
+                        locm_vals, 'Rows', 'complete');
+     
+                case 'orient'
+    
+            end
+
+            subs{thissub,['locm_trials_',char(thispar)]}{1}{1,irun_this_sub} = {cell(1,nruns_this_sub)}; 
+
 
         end
+
+        % from locm_trial_thispar, generate plot of this par for this subject
+        %%% one bar plus error bars for each run
+
+
+        subplot(2,5,isub)
+
+
     end
 
 end
