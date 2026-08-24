@@ -7,7 +7,7 @@
 paths = setpaths_locmod(); 
 
 if ~exist('cortable','var')
-    load('F:\analyses\cor2022-03-14_for_plotting.mat')
+    load([paths.analyses, filesep, 'cor2022-03-14_for_plotting.mat'])
     cortable = cortable_out;
 end
 

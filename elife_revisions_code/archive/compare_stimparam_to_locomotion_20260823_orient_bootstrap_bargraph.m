@@ -131,6 +131,7 @@ for ipar = 1:op.n_stimpars
 end
 
 %% plotting slope of locomotion against parameter for each run for each mouse
+%% plotting slope of locomotion against parameter for each run for each mouse
 num_params = length(op.stimpars);
 nsubs = height(subs); % Total number of mice
 
@@ -159,9 +160,8 @@ for p = 1:num_params
         
         num_runs = length(runs_cell);
         
-        % Initialize arrays to hold bar heights (slopes/amplitudes), angles, and error bounds
+        % Initialize arrays to hold bar heights (slopes/amplitudes) and error bounds
         slopes = NaN(1, num_runs);
-        phis = NaN(1, num_runs); % To store preferred angles for 'orient'
         err_neg = NaN(1, num_runs);
         err_pos = NaN(1, num_runs);
         
@@ -200,37 +200,29 @@ for p = 1:num_params
             % 4. Fit the appropriate model
             if length(Y) > 2 
                 if strcmp(param_name, 'orient')
-                    % --- Circular-Linear Regression (Vector/Amplitude) ---
+                    % --- Circular-Linear Regression (Amplitude) ---
                     X_cos = cos(X);
                     X_sin = sin(X);
                     mdl = fitlm([X_cos, X_sin], Y);
                     
-                    % Calculate tuning amplitude and preferred angle
+                    % Calculate tuning amplitude
                     beta_cos = mdl.Coefficients.Estimate(2);
                     beta_sin = mdl.Coefficients.Estimate(3);
                     amplitude = sqrt(beta_cos^2 + beta_sin^2);
-                    phi = atan2(beta_sin, beta_cos);
-                    
                     slopes(r) = amplitude;
-                    phis(r) = phi;
                     
-                    % Bootstrap 95% CI for the preferred angle
+                    % Bootstrap 95% CI for the amplitude
                     n_boot = 500;
-                    boot_diffs = NaN(n_boot, 1);
+                    boot_amps = NaN(n_boot, 1);
                     for b = 1:n_boot
-                        idx = randi(length(Y), length(Y), 1); % Resample
+                        idx = randi(length(Y), length(Y), 1); % Resample with replacement
                         b_mdl = fitlm([X_cos(idx), X_sin(idx)], Y(idx));
-                        b_cos = b_mdl.Coefficients.Estimate(2);
-                        b_sin = b_mdl.Coefficients.Estimate(3);
-                        b_phi = atan2(b_sin, b_cos);
-                        
-                        % Angular difference wrapped to [-pi, pi] to avoid edge artifacts
-                        boot_diffs(b) = mod((b_phi - phi) + pi, 2*pi) - pi;
+                        boot_amps(b) = norm(b_mdl.Coefficients.Estimate(2:3));
                     end
-                    ci_diffs = prctile(boot_diffs, [2.5, 97.5]);
+                    ci = prctile(boot_amps, [2.5, 97.5]);
                     
-                    err_neg(r) = ci_diffs(1); % Negative angular offset
-                    err_pos(r) = ci_diffs(2); % Positive angular offset
+                    err_neg(r) = amplitude - ci(1);
+                    err_pos(r) = ci(2) - amplitude;
                     
                 else
                     % --- Standard OLS (Slope) for sf and tf ---
@@ -246,190 +238,35 @@ for p = 1:num_params
         end
         
         % --- Plotting ---
-        % Create temporary subplot to grab the correct grid position
-        ax_temp = subplot(num_rows, num_cols, mouse_idx);
+        subplot(num_rows, num_cols, mouse_idx);
         
+        % Draw the bars with a gray face color
+        b = bar(1:num_runs, slopes, 'FaceColor', [0.7 0.7 0.7]);
+        hold on;
+        
+        % Draw the error bars
+        errorbar(1:num_runs, slopes, err_neg, err_pos, 'k.', ...
+            'LineWidth', 1.5, 'CapSize', 10);
+            
+        % Add a zero-line to easily see which error bars cross zero
+        yline(0, 'k--', 'LineWidth', 1);
+        
+        % Formatting
+        xlabel('Run');
         if strcmp(param_name, 'orient')
-            % Swap the cartesian axes for a polaraxes in the same position
-            pos = ax_temp.Position;
-            delete(ax_temp);
-            ax = polaraxes('Position', pos);
-            hold(ax, 'on');
-            
-            % Generate distinct colors for each run to tell the arrows apart
-            colors = lines(num_runs);
-            
-            for r = 1:num_runs
-                if isnan(slopes(r))
-                    continue; 
-                end
-                
-                % Draw the main vector arrow (line with marker at the tip)
-                polarplot(ax, [0, phis(r)], [0, slopes(r)], '-o', ...
-                    'Color', colors(r,:), 'LineWidth', 1.5, ...
-                    'MarkerFaceColor', colors(r,:), 'MarkerSize', 5);
-                
-                % Draw the confidence interval arc at the tip of the vector
-                theta_arc = linspace(phis(r) + err_neg(r), phis(r) + err_pos(r), 50);
-                polarplot(ax, theta_arc, repmat(slopes(r), 1, 50), '-', ...
-                    'Color', colors(r,:), 'LineWidth', 2.5);
-            end
-            
-            % Formatting polar axes
-            ax.ThetaAxisUnits = 'degrees'; % Show labels in degrees instead of radians
-            title(ax, sprintf('Mouse: %s', mouse_id), 'Interpreter', 'none');
-            
+            ylabel('Tuning Amplitude');
         else
-            ax = ax_temp;
-            hold(ax, 'on');
-            
-            % Draw the standard bars for sf and tf
-            b = bar(ax, 1:num_runs, slopes, 'FaceColor', [0.7 0.7 0.7]);
-            
-            % Draw the error bars
-            errorbar(ax, 1:num_runs, slopes, err_neg, err_pos, 'k.', ...
-                'LineWidth', 1.5, 'CapSize', 10);
-                
-            % Add a zero-line
-            yline(ax, 0, 'k--', 'LineWidth', 1);
-            
-            % Formatting cartesian axes
-            xlabel(ax, 'Run');
-            ylabel(ax, 'Slope (\Delta speed per rank)');
-            xticks(ax, 1:num_runs);
-            box(ax, 'off');
-            set(ax, 'TickDir', 'out');
-            title(ax, sprintf('Mouse: %s', mouse_id), 'Interpreter', 'none');
+            ylabel('Slope (\Delta speed per rank)');
         end
+        xticks(1:num_runs);
+        box off;
+        set(gca, 'TickDir', 'out');
     end
     
     % Overall title for the entire figure
     if strcmp(param_name, 'orient')
-        sgtitle(sprintf('Directional Running Bias (Magnitude & Preferred Angle)'), 'Interpreter', 'none');
+        sgtitle(sprintf('Trial Speed Tuning Amplitude vs. %s', param_name), 'Interpreter', 'none');
     else
         sgtitle(sprintf('Linear Trend of Trial Speed vs. %s Rank', param_name), 'Interpreter', 'none');
     end
-end
-
-%% Omnibus Test: Harmonic Linear Mixed-Effects Model for Orientation
-
-% 1. Initialize arrays to build a long-format master table
-all_locm = [];
-all_orient = [];
-all_mice = {};
-all_runs = [];
-
-col_name = 'locm_trials_orient';
-
-% 2. Aggregate all trial data across mice and runs
-for mouse_idx = 1:height(subs)
-    mouse_id = char(subs.sub{mouse_idx});
-    runs_cell = subs.(col_name){mouse_idx};
-
-    if isempty(runs_cell), continue; end
-
-    for r = 1:length(runs_cell)
-        run_table = runs_cell{r};
-        if isempty(run_table), continue; end
-
-        param_vals = run_table.orient; % Orientations in degrees
-        locm_data = run_table.locm_forw_mps;
-
-        for i = 1:length(param_vals)
-            trials = locm_data(i, :);
-            trials = trials(~isnan(trials))'; % Extract valid trials as column vector
-
-            % Append to master arrays
-            all_locm = [all_locm; trials];
-            all_orient = [all_orient; repmat(param_vals(i), length(trials), 1)];
-            all_mice = [all_mice; repmat({mouse_id}, length(trials), 1)];
-            all_runs = [all_runs; repmat(r, length(trials), 1)];
-        end
-    end
-end
-
-% 3. Apply circular transformation (convert to radians, then sine/cosine)
-orient_rad = all_orient * (pi / 180);
-cos_orient = cos(orient_rad);
-sin_orient = sin(orient_rad);
-
-% 4. Build the master table
-T = table(all_locm, cos_orient, sin_orient, categorical(all_mice), categorical(all_runs), ...
-    'VariableNames', {'Locomotion', 'CosOrient', 'SinOrient', 'Mouse', 'Run'});
-
-% 5. Fit the Full Harmonic Model 
-% Predict locomotion using orientation, with random intercepts for runs nested in mice
-lme_full = fitlme(T, 'Locomotion ~ 1 + CosOrient + SinOrient + (1|Mouse) + (1|Mouse:Run)');
-
-% 6. Fit the Null Model (No orientation effects)
-lme_null = fitlme(T, 'Locomotion ~ 1 + (1|Mouse) + (1|Mouse:Run)');
-
-% 7. Omnibus Test: Compare full vs. null model
-stats = compare(lme_null, lme_full);
-
-% Display results
-fprintf('\n=== OMNIBUS TEST RESULTS ===\n');
-fprintf('P-Value for overall Orientation effect on Locomotion: %e\n', stats.pValue(2));
-disp(stats);
-
-%% Omnibus Test: LME for Spatial and Temporal Frequencies
-
-params_to_test = {'sf', 'tf'};
-
-for p = 1:length(params_to_test)
-    param_name = params_to_test{p};
-    col_name = ['locm_trials_' param_name];
-
-    all_locm = [];
-    all_param_vals = [];
-    all_mice = {};
-    all_runs = [];
-
-    % 1. Aggregate trial-level data across mice and runs
-    for mouse_idx = 1:height(subs)
-        mouse_id = char(subs.sub{mouse_idx});
-        runs_cell = subs.(col_name){mouse_idx};
-
-        if isempty(runs_cell), continue; end
-
-        for r = 1:length(runs_cell)
-            run_table = runs_cell{r};
-            if isempty(run_table), continue; end
-
-            param_vals = run_table.(param_name);
-            locm_data = run_table.locm_forw_mps;
-
-            for i = 1:length(param_vals)
-                trials = locm_data(i, :);
-                trials = trials(~isnan(trials))'; % Valid trials vector
-
-                all_locm = [all_locm; trials];
-                all_param_vals = [all_param_vals; repmat(double(param_vals(i)), length(trials), 1)];
-                all_mice = [all_mice; repmat({mouse_id}, length(trials), 1)];
-                all_runs = [all_runs; repmat(r, length(trials), 1)];
-            end
-        end
-    end
-
-    % 2. Build table keeping with stimparam values
-    T = table(all_locm, all_param_vals, categorical(all_mice), categorical(all_runs), ...
-        'VariableNames', {'Locomotion', 'ParamVal', 'Mouse', 'Run'});
-
-    % 3. Fit Full Linear Model (Locomotion predicted by slope of frequency)
-    lme_full = fitlme(T, 'Locomotion ~ 1 + ParamVal + (1|Mouse) + (1|Mouse:Run)');
-
-    % 4. Fit Null Model (No parameter effect)
-    lme_null = fitlme(T, 'Locomotion ~ 1 + (1|Mouse) + (1|Mouse:Run)');
-
-    % 5. Likelihood Ratio Test
-    stats = compare(lme_null, lme_full);
-
-    % Display Results
-    fprintf('\n=== CONTINUOUS LINEAR TEST RESULTS: %s ===\n', upper(param_name));
-    fprintf('P-Value for overall %s effect on Locomotion: %e\n', upper(param_name), stats.pValue(2));
-    disp(stats);
-
-    % Display estimated slope coefficient
-    slope_est = lme_full.Coefficients.Estimate(2);
-    fprintf('Estimated Slope: %.6f speed units per %s unit\n', slope_est, param_name);
 end
