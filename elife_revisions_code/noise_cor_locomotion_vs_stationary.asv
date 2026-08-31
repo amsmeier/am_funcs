@@ -44,16 +44,7 @@ cor{'all','cor'} = {load(fullfile(paths.data, 'analyses', 'cor_all'), 'cortable'
 cor{'stat','cor'} = {load(fullfile(paths.data, 'analyses', 'cor_stationary'), 'cortable').cortable};
 cor{'loc','cor'} = {load(fullfile(paths.data, 'analyses', 'cor_locomoting'), 'cortable').cortable};
 
-
-
-%% ADAPT SECTION FROM C:\docs\code\am_funcs\cor\cor_plotting_multi_groups.m FOR GETTING QUANTGROUP_PAIR
-% add 'quantgroup_pair' label to each pair
-%%% maintain consistency with prior scripts: group 1 = interpatch-interpatch, group 2 = patch-interpatch, group 3 = patch-patch
-
-% NEED TO FIND WHERE QUANTGROUP GOT ASSIGNED AND COPY THAT CODE HERE
-
-
-
+% add 'quantgroup_pair' label to each p
 
 %% generate correlation barplots for each condition
 % code copied from cor_interval_plotting.m
@@ -61,7 +52,7 @@ for icond = 1:length(conditions)
     thiscon = conditions{icond};
     cortab = cor{thiscon,"cor"}; 
 
-    
+    %% ADAPT SECTION FROM C:\docs\code\am_funcs\cor\cor_plotting_multi_groups.m FOR GETTING QUANTGROUP_PAIR
 
 
     % find pairs that fall in the specified distance interval
