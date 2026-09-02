@@ -12,6 +12,7 @@ intervalpars.barerror_line_width = 3; % set errorbar line width
 intervalpars.error_line_color = [0 0 0];    %%%%% repmat({[0 0 0]},1,length(pars.curves_colorlist)); % set errorbar line color
 intervalpars.umdist_minmax = [250 425]; 
 %         intervalpars.bar_colors = cellfun(@(x) x*1.6, pars.curves_colorlist,'UniformOutput',0); % use lightened curve colors for bars
+intervalpars.curves_colorlist = {[0 0.6 0] [0 0 0] [0.8 0 1] [1 1 0] [1 0 1] [ 0 1 1]};
 intervalpars.bar_colors = [pars.curves_colorlist(1), {0.2*ones(1,3)}, pars.curves_colorlist(3)];
 intervalpars.border_colors = repmat({[0 0 0]},1,length(pars.curves_colorlist));
 intervalpars.xlim = [0.25 3.6];
@@ -44,7 +45,16 @@ cor{'all','cor'} = {load(fullfile(paths.data, 'analyses', 'cor_all'), 'cortable'
 cor{'stat','cor'} = {load(fullfile(paths.data, 'analyses', 'cor_stationary'), 'cortable').cortable};
 cor{'loc','cor'} = {load(fullfile(paths.data, 'analyses', 'cor_locomoting'), 'cortable').cortable};
 
-% add 'quantgroup_pair' label to each p
+
+
+%% ADAPT SECTION FROM C:\docs\code\am_funcs\cor\cor_plotting_multi_groups.m FOR GETTING QUANTGROUP_PAIR
+% add 'quantgroup_pair' label to each pair
+%%% maintain consistency with prior scripts: group 1 = interpatch-interpatch, group 2 = patch-interpatch, group 3 = patch-patch
+
+% NEED TO FIND WHERE QUANTGROUP GOT ASSIGNED AND COPY THAT CODE HERE..... it is in pairwise_cor_plotting
+
+
+
 
 %% generate correlation barplots for each condition
 % code copied from cor_interval_plotting.m
@@ -52,7 +62,9 @@ for icond = 1:length(conditions)
     thiscon = conditions{icond};
     cortab = cor{thiscon,"cor"}; 
 
-    %% ADAPT SECTION FROM C:\docs\code\am_funcs\cor\cor_plotting_multi_groups.m FOR GETTING QUANTGROUP_PAIR
+    
+
+    
 
 
     % find pairs that fall in the specified distance interval

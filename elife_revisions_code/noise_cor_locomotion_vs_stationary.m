@@ -12,6 +12,7 @@ intervalpars.barerror_line_width = 3; % set errorbar line width
 intervalpars.error_line_color = [0 0 0];    %%%%% repmat({[0 0 0]},1,length(pars.curves_colorlist)); % set errorbar line color
 intervalpars.umdist_minmax = [250 425]; 
 %         intervalpars.bar_colors = cellfun(@(x) x*1.6, pars.curves_colorlist,'UniformOutput',0); % use lightened curve colors for bars
+intervalpars.curves_colorlist = {[0 0.6 0] [0 0 0] [0.8 0 1] [1 1 0] [1 0 1] [ 0 1 1]};
 intervalpars.bar_colors = [pars.curves_colorlist(1), {0.2*ones(1,3)}, pars.curves_colorlist(3)];
 intervalpars.border_colors = repmat({[0 0 0]},1,length(pars.curves_colorlist));
 intervalpars.xlim = [0.25 3.6];
@@ -50,7 +51,7 @@ cor{'loc','cor'} = {load(fullfile(paths.data, 'analyses', 'cor_locomoting'), 'co
 % add 'quantgroup_pair' label to each pair
 %%% maintain consistency with prior scripts: group 1 = interpatch-interpatch, group 2 = patch-interpatch, group 3 = patch-patch
 
-% NEED TO FIND WHERE QUANTGROUP GOT ASSIGNED AND COPY THAT CODE HERE
+% NEED TO FIND WHERE QUANTGROUP GOT ASSIGNED AND COPY THAT CODE HERE..... it is in pairwise_cor_plotting
 
 
 
@@ -59,7 +60,13 @@ cor{'loc','cor'} = {load(fullfile(paths.data, 'analyses', 'cor_locomoting'), 'co
 % code copied from cor_interval_plotting.m
 for icond = 1:length(conditions)
     thiscon = conditions{icond};
-    cortab = cor{thiscon,"cor"}; 
+    cortab = cor{thiscon,"cor"}{1}; 
+
+    cortab.quantgroup1 = nan(height(cortab),1); cortab.quantgroup2 = nan(height(cortab),1);
+    cortab.quantgroup1(any(cortab.quantile1==[1 2 3],2)) = 1;     cortab.quantgroup2(any(cortab.quantile2==[1 2 3],2)) = 1; % find interpatch rois
+    cortab.quantgroup1(any(cortab.quantile1==[4 5 6],2)) = 2;     cortab.quantgroup2(any(cortab.quantile2==[4 5 6],2)) = 2; % find patch rois
+    cortab.quantgroup_pair = [cortab.quantgroup1 + cortab.quantgroup2] - 1; % shortcut to get pair identity: IP-IP = 1, IP-P = 2, P-P = 3
+
 
     
 
