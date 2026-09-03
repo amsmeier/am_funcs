@@ -5,6 +5,7 @@
 
 %% params
 % interval plotting options 
+intervalpars.var_to_plot = 'corcoef_noise'; 
 intervalpars.axis_thickness = 5; 
 
 intervalpars.bargraph_line_width = 5;
@@ -13,11 +14,17 @@ intervalpars.error_line_color = [0 0 0];    %%%%% repmat({[0 0 0]},1,length(pars
 intervalpars.umdist_minmax = [250 425]; 
 %         intervalpars.bar_colors = cellfun(@(x) x*1.6, pars.curves_colorlist,'UniformOutput',0); % use lightened curve colors for bars
 intervalpars.curves_colorlist = {[0 0.6 0] [0 0 0] [0.8 0 1] [1 1 0] [1 0 1] [ 0 1 1]};
-intervalpars.bar_colors = [pars.curves_colorlist(1), {0.2*ones(1,3)}, pars.curves_colorlist(3)];
-intervalpars.border_colors = repmat({[0 0 0]},1,length(pars.curves_colorlist));
+intervalpars.bar_colors = [intervalpars.curves_colorlist(1), {0.2*ones(1,3)}, intervalpars.curves_colorlist(3)];
+intervalpars.border_colors = repmat({[0 0 0]},1,length(intervalpars.curves_colorlist));
 intervalpars.xlim = [0.25 3.6];
 intervalpars.ylim = [0 0.2]; 
 intervalpars.fig_outerposition = [0.05 0.05 0.4 0.7]; % [left bottom width height]
+
+windowstyle = 'normal'; % 'normal' or 'docked'
+
+pars.axis_font_bold = 1; 
+pars.axis_font_size = 14;
+pars.font_name = 'arial';
 
 %% paths
 
@@ -46,34 +53,22 @@ cor{'stat','cor'} = {load(fullfile(paths.data, 'analyses', 'cor_stationary'), 'c
 cor{'loc','cor'} = {load(fullfile(paths.data, 'analyses', 'cor_locomoting'), 'cortable').cortable};
 
 
-
-%% ADAPT SECTION FROM C:\docs\code\am_funcs\cor\cor_plotting_multi_groups.m FOR GETTING QUANTGROUP_PAIR
-% add 'quantgroup_pair' label to each pair
-%%% maintain consistency with prior scripts: group 1 = interpatch-interpatch, group 2 = patch-interpatch, group 3 = patch-patch
-
-% NEED TO FIND WHERE QUANTGROUP GOT ASSIGNED AND COPY THAT CODE HERE..... it is in pairwise_cor_plotting
-
-
-
-
 %% generate correlation barplots for each condition
 % code copied from cor_interval_plotting.m
 for icond = 1:length(conditions)
     thiscon = conditions{icond};
     cortab = cor{thiscon,"cor"}{1}; 
 
+    % add 'quantgroup_pair' label to each pair.... adapted from am_funcs\cor\cor_plotting_multi_groups
+    %%% maintain consistency with prior scripts: group 1 = interpatch-interpatch, group 2 = patch-interpatch, group 3 = patch-patch
     cortab.quantgroup1 = nan(height(cortab),1); cortab.quantgroup2 = nan(height(cortab),1);
     cortab.quantgroup1(any(cortab.quantile1==[1 2 3],2)) = 1;     cortab.quantgroup2(any(cortab.quantile2==[1 2 3],2)) = 1; % find interpatch rois
     cortab.quantgroup1(any(cortab.quantile1==[4 5 6],2)) = 2;     cortab.quantgroup2(any(cortab.quantile2==[4 5 6],2)) = 2; % find patch rois
     cortab.quantgroup_pair = [cortab.quantgroup1 + cortab.quantgroup2] - 1; % shortcut to get pair identity: IP-IP = 1, IP-P = 2, P-P = 3
 
-
-    
-
-
     % find pairs that fall in the specified distance interval
     matchrows = cortab.umdist>intervalpars.umdist_minmax(1) & cortab.umdist<intervalpars.umdist_minmax(2); %%% apply distance interval
-    matchrows = matchrows & analysis_pars.include; %%% apply inclusion criteria that were specified in cor_plotting_multi_groups.m
+    % matchrows = matchrows & analysis_pars.include; %%% apply inclusion criteria that were specified in cor_plotting_multi_groups.m
     vals_to_plot = cortab{matchrows, intervalpars.var_to_plot}; 
     labels_to_plot = cortab.quantgroup_pair(matchrows); % labels = interpatch-interpatch (1), patch-interpatch (2), patch-patch (3)
     labelnames = unique(labels_to_plot(~isnan(labels_to_plot)));
@@ -106,7 +101,7 @@ for icond = 1:length(conditions)
         end
         hold off
 
-    if pars.show_title; title([plot_titles{ivar}, titlestring]); end
+
     hax = gca;
     hax.FontSize = pars.axis_font_size;
     hax.FontName = pars.font_name;
@@ -119,10 +114,10 @@ for icond = 1:length(conditions)
 
 
 
-    [h, p_interpatch_mixed] = ttest2(sorted_vals{1,intervalpars.var_to_plot}{:}, sorted_vals{2,intervalpars.var_to_plot}{:});
-    [h, p_interpatch_patch] = ttest2(sorted_vals{1,intervalpars.var_to_plot}{:}, sorted_vals{3,intervalpars.var_to_plot}{:});
-    [h, p_mixed_patch] = ttest2(sorted_vals{2,intervalpars.var_to_plot}{:}, sorted_vals{3,intervalpars.var_to_plot}{:});
-    fprintf([titlestring, '...pvals... IP-mixed ', num2str(p_interpatch_mixed), '... IP-P ', num2str(p_interpatch_patch), '... mixed-P ', num2str(p_mixed_patch) '\n'])
+    [h, cor{thiscon,'p_interpatch_mixed'}] = ttest2(sorted_vals{1,intervalpars.var_to_plot}{:}, sorted_vals{2,intervalpars.var_to_plot}{:});
+    [h, cor{thiscon,'p_interpatch_patch'}] = ttest2(sorted_vals{1,intervalpars.var_to_plot}{:}, sorted_vals{3,intervalpars.var_to_plot}{:});
+    [h, cor{thiscon,'p_mixed_patch'}] = ttest2(sorted_vals{2,intervalpars.var_to_plot}{:}, sorted_vals{3,intervalpars.var_to_plot}{:});
+    fprintf(['locomotion condition = ', thiscon, '...pvals... IP-mixed ', num2str(cor{thiscon,'p_interpatch_mixed'}), '... IP-P ', num2str(cor{thiscon,'p_interpatch_patch'}), '... mixed-P ', num2str(cor{thiscon,'p_mixed_patch'}) '\n'])
 
 
 end
